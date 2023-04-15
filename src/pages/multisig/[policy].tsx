@@ -8,7 +8,7 @@ import type { Policy, MultisigWalletParams } from '../../db'
 import { useCallback, useContext, useMemo, useState } from 'react'
 import type { FC } from 'react'
 import { ConfigContext, isMainnet } from '../../cardano/config'
-import { Hero, Layout, Panel, Modal } from '../../components/layout'
+import { Hero, Layout, Panel, Modal, RefreshButton } from '../../components/layout'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useUTxOSummaryQuery, isRegisteredOnChain, getAvailableReward } from '../../cardano/query-api'
 import { ArrowDownTrayIcon, InformationCircleIcon } from '@heroicons/react/24/solid'
@@ -194,7 +194,7 @@ const GetPolicy: NextPage = () => {
           <div className='text-sm'>
             {multisigWallet && multisigWallet.description.length > 0 && <div>{multisigWallet.description}</div>}
           </div>
-          <div className='flex'>
+          <div className='flex relative'>
             <nav className='text-sm rounded border-white border divide-x overflow-hidden'>
               <button
                 onClick={() => setTab('summary')}
@@ -227,6 +227,7 @@ const GetPolicy: NextPage = () => {
                 Remove
               </button>}
             </nav>
+            <RefreshButton className="absolute bottom-0 right-0"/>
           </div>
           {tab === 'edit' && <div className='flex items-center space-x-1'>
             <InformationCircleIcon className='w-4' />

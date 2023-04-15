@@ -18,6 +18,7 @@ import { getMultisigWalletPath, getPersonalWalletPath } from '../route'
 import { SpinnerIcon } from './status'
 import { useCardanoMultiplatformLib } from '../cardano/multiplatform-lib'
 import { ExportUserDataButton, ImportUserData } from './user-data'
+import { walletRefreshContext } from './walletRefreshContext'
 
 const Toggle: FC<{
   isOn: boolean
@@ -241,6 +242,7 @@ const MultisigWalletListing: FC<{
 }
 
 const WalletList: FC = () => {
+  const { fetchStatus, setFetchStatus } = useContext(walletRefreshContext)
   const [config, _] = useContext(ConfigContext)
   const cardano = useCardanoMultiplatformLib()
   const multisigWallets = useLiveQuery(async () => db.multisigWallets.toArray())
@@ -255,11 +257,20 @@ const WalletList: FC = () => {
     })
     return Array.from(result)
   }, [multisigWallets, personalWallets, config, cardano])
-  const { data } = usePaymentAddressesQuery({
+  const { data, refetch } = usePaymentAddressesQuery({
     variables: { addresses },
     fetchPolicy: 'cache-first',
-    pollInterval: 20000,
-    skip: addresses.length === 0
+    pollInterval: 60000,
+    skip: addresses.length === 0,
+    notifyOnNetworkStatusChange: true,
+    onCompleted: () => {
+      setFetchStatus({
+        refetch: false,
+        lastFetched: 0,
+        isLoading: false,
+        isCompleted: true,
+      });
+    },
   })
   const balances: Map<string, Value> | undefined = useMemo(() => {
     if (!data) return
@@ -273,6 +284,10 @@ const WalletList: FC = () => {
 
     return balanceMap
   }, [data])
+
+  if(fetchStatus.refetch){
+    refetch();
+  }
 
   return (
     <aside className='flex flex-col w-60 bg-sky-800 items-center text-white overflow-y-auto'>
@@ -291,6 +306,50 @@ const WalletList: FC = () => {
       </nav>
     </aside>
   )
+}
+
+const RefreshButton: FC<{
+  className?: string;
+}> = ({ className }) => {
+  const { fetchStatus, setFetchStatus } = useContext(walletRefreshContext);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setFetchStatus((prevFetchStatus) => ({
+        ...prevFetchStatus,
+        lastFetched: prevFetchStatus.lastFetched + 1,
+      }));
+    }, 1000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [setFetchStatus]);
+  const handleRefreshClick = () => {
+    setFetchStatus({
+      refetch:true,
+      lastFetched: fetchStatus.lastFetched,
+      isLoading: true,
+      isCompleted: false,
+    });
+  } 
+  return (
+    <div
+      className={[
+        "text-sm rounded border-white border divide-x overflow-hidden",
+        className,
+      ].join(" ")}
+    >
+      {fetchStatus.isLoading !== true && <span className="px-2 py-1">Synced {fetchStatus.lastFetched}s ago</span>}
+      {fetchStatus.isLoading && <span className="px-2 py-1">Syncing..</span>}
+      <button
+        className="px-2 py-1 hover:text-black"
+        onClick={handleRefreshClick}
+      >
+        Refresh
+      </button>
+    </div>
+  );
 }
 
 const Hero: FC<{
@@ -575,4 +634,4 @@ const InlineEditInput: FC<{
   )
 }
 
-export { Layout, Panel, Toggle, Hero, BackButton, CopyButton, ShareCurrentURLButton, Portal, Modal, ConfirmModalButton, useEnterPressListener, TextareaModalBox }
+export { Layout, Panel, Toggle, Hero, BackButton, CopyButton, ShareCurrentURLButton, Portal, Modal, ConfirmModalButton, useEnterPressListener, TextareaModalBox, RefreshButton }

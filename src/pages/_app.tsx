@@ -6,6 +6,10 @@ import { NotificationContext, useNotification } from '../components/notification
 import { ApolloClient, ApolloProvider, InMemoryCache } from '@apollo/client'
 import { GraphQLURIContext } from '../cardano/query-api'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  walletRefreshContext,
+  FetchStatus,
+} from "../components/walletRefreshContext";
 
 function MyApp({ Component, pageProps }: AppProps) {
   const notification = useNotification()
@@ -40,7 +44,15 @@ function MyApp({ Component, pageProps }: AppProps) {
     }
   }, [])
 
+  const [fetchStatus, setFetchStatus] = useState<FetchStatus>({
+    refetch:false,
+    lastFetched: 0,
+    isLoading: true,
+    isCompleted: false,
+  });
+
   return (
+  <walletRefreshContext.Provider value={{ fetchStatus, setFetchStatus }}>
     <ConfigContext.Provider value={configContext}>
       <GraphQLURIContext.Provider value={graphQLContext}>
         <NotificationContext.Provider value={notification}>
@@ -53,6 +65,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         </NotificationContext.Provider>
       </GraphQLURIContext.Provider>
     </ConfigContext.Provider>
+  </walletRefreshContext.Provider>
   )
 }
 

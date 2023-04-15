@@ -3,7 +3,7 @@ import type { NextPage } from 'next'
 import { useRouter } from 'next/router'
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { FC, ChangeEventHandler } from 'react'
-import { ConfirmModalButton, Hero, Layout, Modal, Panel, Portal } from '../../components/layout'
+import { ConfirmModalButton, Hero, Layout, Modal, Panel, Portal, RefreshButton } from '../../components/layout'
 import { AskPasswordModalButton } from '../../components/password'
 import { Loading, PartialLoading } from '../../components/status'
 import { db, deletePersonalWallet, updatePersonalWallet, updatePersonalWalletAndDeindex } from '../../db'
@@ -255,6 +255,9 @@ const Personal: FC<{
             <AskPasswordModalButton title={wallet.name} onConfirm={addAccount} className='px-2 py-1'>
               Add Account
             </AskPasswordModalButton>
+          </nav>
+          <nav>
+            <RefreshButton/>
           </nav>
         </div>
       </Portal>
